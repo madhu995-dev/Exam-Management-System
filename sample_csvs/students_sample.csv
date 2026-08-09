@@ -1,0 +1,11 @@
+firstName,lastName,email,phone,gender,dateOfBirth,hallTicketNumber,departmentId
+Aarav,Sharma,aarav.sharma@college.edu,9876543210,MALE,2003-04-12,HT2026101,1
+Ananya,Verma,ananya.verma@college.edu,9876543211,FEMALE,2003-08-25,HT2026102,1
+Rohan,Gupta,rohan.gupta@college.edu,9876543212,MALE,2002-11-05,HT2026103,1
+Priya,Reddy,priya.reddy@college.edu,9876543213,FEMALE,2003-01-18,HT2026104,1
+Vikram,Singh,vikram.singh@college.edu,9876543214,MALE,2002-09-30,HT2026105,1
+Kavya,Nair,kavya.nair@college.edu,9876543215,FEMALE,2003-06-14,HT2026106,1
+Siddharth,Rao,siddharth.rao@college.edu,9876543216,MALE,2002-12-01,HT2026107,1
+Neha,Joshi,neha.joshi@college.edu,9876543217,FEMALE,2003-03-22,HT2026108,1
+Aditya,Patel,aditya.patel@college.edu,9876543218,MALE,2002-07-19,HT2026109,1
+Pooja,Kumar,pooja.kumar@college.edu,9876543219,FEMALE,2003-10-10,HT2026110,1

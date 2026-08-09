@@ -1,0 +1,6 @@
+firstName,lastName,email,phone,employeeId,designation,qualification,departmentId
+Dr. Rajesh,Kumar,rajesh.kumar@college.edu,9876543220,EMP202601,Professor,Ph.D in Computer Science,1
+Dr. Sunita,Rao,sunita.rao@college.edu,9876543221,EMP202602,Associate Professor,Ph.D in Information Technology,1
+Amit,Deshmukh,amit.deshmukh@college.edu,9876543222,EMP202603,Assistant Professor,M.Tech in CSE,1
+Priyanka,Sen,priyanka.sen@college.edu,9876543223,EMP202604,Assistant Professor,M.Tech in Software Engineering,1
+Suresh,Menon,suresh.menon@college.edu,9876543224,EMP202605,Associate Professor,Ph.D in Artificial Intelligence,1

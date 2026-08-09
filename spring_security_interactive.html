@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Security 6 & JWT Interactive Visualizer</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --bg-card: rgba(17, 24, 39, 0.75);
+            --bg-card-hover: rgba(31, 41, 55, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(99, 102, 241, 0.4);
+            
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.35);
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --cyan: #06b6d4;
+            
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-dim: #6b7280;
+
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-heading: 'Outfit', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                radial-gradient(at 90% 90%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(6, 182, 212, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* App Container */
+        .app-header {
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px var(--primary-glow);
+            font-weight: 800;
+            font-size: 1.2rem;
+        }
+
+        .brand-text h1 {
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.35rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            box-shadow: 0 4px 15px var(--primary-glow);
+        }
+
+        .main-content {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        }
+
+        /* Glass Cards */
+        .glass-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(99, 102, 241, 0.25);
+        }
+
+        .panel-title {
+            font-family: var(--font-heading);
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #e0e7ff;
+        }
+
+        /* Controls & Form inputs */
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.825rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            font-family: var(--font-mono);
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.8rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 15px var(--primary-glow);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--primary-glow);
+        }
+
+        .btn-action:active {
+            transform: translateY(0);
+        }
+
+        /* Request Simulation Flow Trace */
+        .flow-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .flow-step {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .flow-step.active {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.12);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+            transform: scale(1.02);
+        }
+
+        .flow-step.passed {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .flow-step.rejected {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.12);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .flow-step.active .step-num {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 0 12px var(--primary);
+        }
+
+        .flow-step.passed .step-num {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .flow-step.rejected .step-num {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .step-info {
+            flex-grow: 1;
+        }
+
+        .step-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .step-desc {
+            font-size: 0.825rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .step-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-pending { background: rgba(156, 163, 175, 0.2); color: #9ca3af; }
+        .badge-running { background: rgba(99, 102, 241, 0.25); color: #a5b4fc; }
+        .badge-success { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; }
+        .badge-error { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
+
+        /* Code Viewer */
+        .code-container {
+            background: #060911;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            font-family: var(--font-mono);
+            font-size: 0.825rem;
+        }
+
+        .code-header {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        pre {
+            padding: 1rem;
+            overflow-x: auto;
+            color: #d1d5db;
+        }
+
+        .kw { color: #c084fc; font-weight: 600; } /* Keyword */
+        .ann { color: #f472b6; font-weight: 600; } /* Annotation */
+        .cls { color: #38bdf8; } /* Class */
+        .str { color: #4ade80; } /* String */
+        .cm { color: #6b7280; italic: true; } /* Comment */
+
+        /* Quiz Flashcards */
+        .quiz-card {
+            perspective: 1000px;
+            min-height: 280px;
+            cursor: pointer;
+        }
+
+        .quiz-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: left;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .quiz-card.flipped .quiz-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .quiz-front, .quiz-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+        }
+
+        .quiz-back {
+            transform: rotateY(180deg);
+            background: rgba(15, 23, 42, 0.95);
+            border-color: var(--primary);
+        }
+
+        .quiz-category {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .quiz-question {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            margin: 1rem 0;
+        }
+
+        .quiz-answer {
+            font-size: 0.9rem;
+            color: #d1d5db;
+            line-height: 1.5;
+            margin-top: 0.5rem;
+        }
+
+        .quiz-hint {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        /* Result Console Log */
+        .terminal-box {
+            background: #030712;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: #38bdf8;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .log-line {
+            margin-bottom: 0.4rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .log-time { color: var(--text-dim); }
+        .log-info { color: #38bdf8; }
+        .log-success { color: #4ade80; }
+        .log-warn { color: #fbbf24; }
+        .log-error { color: #f87171; }
+
+        /* Interactive Component Select List */
+        .comp-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .comp-item {
+            padding: 0.8rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .comp-item:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .comp-item.active {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .comp-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #fff;
+        }
+
+        .comp-type {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-logo">🛡️</div>
+            <div class="brand-text">
+                <h1>Exam System Security Inspector</h1>
+                <p>Interactive Spring Security 6 & JWT Architecture Simulator</p>
+            </div>
+        </div>
+
+        <nav class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('simulator')">
+                <span>⚡</span> Request Simulator
+            </button>
+            <button class="tab-btn" onclick="switchTab('components')">
+                <span>🧩</span> Architecture & Code
+            </button>
+            <button class="tab-btn" onclick="switchTab('jwt')">
+                <span>🔑</span> JWT Token Inspector
+            </button>
+            <button class="tab-btn" onclick="switchTab('quiz')">
+                <span>🎯</span> Interview Flashcards
+            </button>
+        </nav>
+    </header>
+
+    <main class="main-content">
+
+        <!-- TAB 1: REQUEST SIMULATOR -->
+        <section id="simulator" class="tab-content active">
+            <div class="grid-2">
+                <!-- Left: Request Configuration -->
+                <div class="glass-panel">
+                    <div class="panel-title">
+                        <span>🚀</span> Simulate HTTP Request
+                    </div>
+
+                    <div class="form-group">
+                        <label>Target API Endpoint</label>
+                        <select id="sim-endpoint" class="form-select" onchange="updateSimDefaults()">
+                            <option value="/api/users/login">POST /api/users/login (Public Auth)</option>
+                            <option value="/api/users/register">POST /api/users/register (Public Auth)</option>
+                            <option value="/api/exams" data-method="POST">POST /api/exams (Create Exam - Admin Only)</option>
+                            <option value="/api/exams" data-method="GET">GET /api/exams (View Exams - Admin/Faculty/Student)</option>
+                            <option value="/api/users/change-password">PUT /api/users/change-password (Authenticated User)</option>
+                            <option value="/swagger-ui/index.html">GET /swagger-ui/index.html (Public Docs)</option>
+                        </select>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>HTTP Method</label>
+                            <select id="sim-method" class="form-select">
+                                <option value="POST">POST</option>
+                                <option value="GET">GET</option>
+                                <option value="PUT">PUT</option>
+                                <option value="DELETE">DELETE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>User Role (JWT Payload)</label>
+                            <select id="sim-role" class="form-select">
+                                <option value="ADMIN">ROLE_ADMIN</option>
+                                <option value="FACULTY">ROLE_FACULTY</option>
+                                <option value="STUDENT">ROLE_STUDENT</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Authorization Header</label>
+                        <select id="sim-token-type" class="form-select">
+                            <option value="valid">Bearer Valid_JWT_Token (Valid & Signed)</option>
+                            <option value="expired">Bearer Expired_JWT_Token (Signature Valid, Expired)</option>
+                            <option value="invalid">Bearer Malformed_JWT_Token (Invalid Signature)</option>
+                            <option value="none">No Authorization Header (Unauthenticated)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-action" onclick="runSecuritySimulation()">
+                        <span>▶</span> Execute Request & Trace Flow
+                    </button>
+                </div>
+
+                <!-- Right: Step-by-Step Security Pipeline Trace -->
+                <div class="glass-panel">
+                    <div class="panel-title">
+                        <span>🔍</span> Live Spring Security Filter Chain Pipeline
+                    </div>
+
+                    <div class="flow-container" id="flow-pipeline">
+                        <!-- Step 1 -->
+                        <div class="flow-step" id="step-1">
+                            <div class="step-num">1</div>
+                            <div class="step-info">
+                                <div class="step-title">
+                                    <span>SecurityFilterChain Authorization Check</span>
+                                    <span class="step-badge badge-pending" id="badge-1">Pending</span>
+                                </div>
+                                <div class="step-desc">Check requestMatchers in SecurityConfig (.permitAll() vs .authenticated())</div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="flow-step" id="step-2">
+                            <div class="step-num">2</div>
+                            <div class="step-info">
+                                <div class="step-title">
+                                    <span>JwtAuthenticationFilter (OncePerRequestFilter)</span>
+                                    <span class="step-badge badge-pending" id="badge-2">Pending</span>
+                                </div>
+                                <div class="step-desc">Extract "Authorization: Bearer <token>" & parse claims</div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="flow-step" id="step-3">
+                            <div class="step-num">3</div>
+                            <div class="step-info">
+                                <div class="step-title">
+                                    <span>CustomerUserDetailsService & JWT Validation</span>
+                                    <span class="step-badge badge-pending" id="badge-3">Pending</span>
+                                </div>
+                                <div class="step-desc">Load UserDetails from DB, check expiration & verify HMAC key</div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="flow-step" id="step-4">
+                            <div class="step-num">4</div>
+                            <div class="step-info">
+                                <div class="step-title">
+                                    <span>SecurityContextHolder Population</span>
+                                    <span class="step-badge badge-pending" id="badge-4">Pending</span>
+                                </div>
+                                <div class="step-desc">Set UsernamePasswordAuthenticationToken in ThreadLocal context</div>
+                            </div>
+                        </div>
+
+                        <!-- Step 5 -->
+                        <div class="flow-step" id="step-5">
+                            <div class="step-num">5</div>
+                            <div class="step-info">
+                                <div class="step-title">
+                                    <span>Method Security Authorization (@PreAuthorize)</span>
+                                    <span class="step-badge badge-pending" id="badge-5">Pending</span>
+                                </div>
+                                <div class="step-desc">Evaluate SpEL expression (e.g. hasRole('ADMIN'))</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom: Live Execution Console Log -->
+            <div class="glass-panel" style="margin-top: 1.5rem;">
+                <div class="panel-title">
+                    <span>💻</span> Internal Security Diagnostics Console
+                </div>
+                <div class="terminal-box" id="console-log">
+                    <div class="log-line">
+                        <span class="log-time">[SYSTEM READY]</span>
+                        <span class="log-info">Select parameters above and click "Execute Request" to trace Spring Security internally.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: ARCHITECTURE & CODE -->
+        <section id="components" class="tab-content">
+            <div class="grid-2">
+                <!-- Left: List of Components -->
+                <div class="glass-panel">
+                    <div class="panel-title">
+                        <span>🏛️</span> Spring Security Components
+                    </div>
+                    <div class="comp-list">
+                        <div class="comp-item active" onclick="loadComponentCode('securityConfig', this)">
+                            <div>
+                                <div class="comp-name">SecurityConfig.java</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Main FilterChain & Beans</div>
+                            </div>
+                            <span class="comp-type">@Configuration</span>
+                        </div>
+
+                        <div class="comp-item" onclick="loadComponentCode('jwtFilter', this)">
+                            <div>
+                                <div class="comp-name">JwtAuthenticationFilter.java</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Custom Request Interceptor</div>
+                            </div>
+                            <span class="comp-type">OncePerRequestFilter</span>
+                        </div>
+
+                        <div class="comp-item" onclick="loadComponentCode('userDetails', this)">
+                            <div>
+                                <div class="comp-name">CustomerUserDetails.java</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">ROLE_ Authority Mapping</div>
+                            </div>
+                            <span class="comp-type">UserDetails</span>
+                        </div>
+
+                        <div class="comp-item" onclick="loadComponentCode('userDetailsService', this)">
+                            <div>
+                                <div class="comp-name">CustomerUserDetailsService.java</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Database User Loader</div>
+                            </div>
+                            <span class="comp-type">UserDetailsService</span>
+                        </div>
+
+                        <div class="comp-item" onclick="loadComponentCode('jwtService', this)">
+                            <div>
+                                <div class="comp-name">JwtService.java</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">JJWT 0.12.6 Token Provider</div>
+                            </div>
+                            <span class="comp-type">@Service</span>
+                        </div>
+
+                        <div class="comp-item" onclick="loadComponentCode('controller', this)">
+                            <div>
+                                <div class="comp-name">ExamController.java</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Method Security (@PreAuthorize)</div>
+                            </div>
+                            <span class="comp-type">@RestController</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Code Viewer & Architectural Explanation -->
+                <div class="glass-panel">
+                    <div class="panel-title" id="code-panel-title">
+                        <span>📝</span> Code & Explanation: SecurityConfig.java
+                    </div>
+
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;" id="comp-explanation">
+                        Configures Spring Security 6 SecurityFilterChain bean, disables CSRF for stateless JWT API architecture, defines public permitAll endpoints, and adds JwtAuthenticationFilter before UsernamePasswordAuthenticationFilter.
+                    </div>
+
+                    <div class="code-container">
+                        <div class="code-header">
+                            <span id="code-filepath">com/exam/exam_management_system/config/SecurityConfig.java</span>
+                            <span>Java 21</span>
+                        </div>
+                        <pre id="code-snippet"></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: JWT TOKEN INSPECTOR -->
+        <section id="jwt" class="tab-content">
+            <div class="grid-2">
+                <div class="glass-panel">
+                    <div class="panel-title">
+                        <span>🛠️</span> Live JWT Token Generator & Inspector
+                    </div>
+
+                    <div class="form-group">
+                        <label>Username (Subject)</label>
+                        <input type="text" id="jwt-sub" class="form-control" value="admin_user">
+                    </div>
+
+                    <div class="form-group">
+                        <label>User Role (Authority Claim)</label>
+                        <select id="jwt-role" class="form-select">
+                            <option value="ADMIN">ADMIN (ROLE_ADMIN)</option>
+                            <option value="FACULTY">FACULTY (ROLE_FACULTY)</option>
+                            <option value="STUDENT">STUDENT (ROLE_STUDENT)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Secret Key (jwt.secret in application.properties)</label>
+                        <input type="text" id="jwt-secret" class="form-control" value="MzJieXRlc2xvbmdzZWNyZXRrZXlmb3Jqd3RzaWduaW5nMTIzNDU2">
+                    </div>
+
+                    <button class="btn-action" onclick="generateSimulatedJwt()">
+                        <span>✨</span> Generate Simulated JWT
+                    </button>
+                </div>
+
+                <div class="glass-panel">
+                    <div class="panel-title">
+                        <span>📦</span> Decoded JWT Anatomy
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">COMPACT JWT TOKEN</label>
+                        <div id="jwt-compact" style="word-break: break-all; font-family: var(--font-mono); font-size: 0.8rem; background: #030712; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); color: var(--cyan); margin-top: 0.3rem;">
+                            Click generate above to create token...
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div>
+                            <label style="font-size: 0.8rem; font-weight: 600; color: #f472b6;">HEADER (Algorithm & Type)</label>
+                            <div class="code-container" style="margin-top: 0.3rem;">
+                                <pre id="jwt-header-json">{\n  "alg": "HS256",\n  "typ": "JWT"\n}</pre>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.8rem; font-weight: 600; color: #c084fc;">PAYLOAD (Claims)</label>
+                            <div class="code-container" style="margin-top: 0.3rem;">
+                                <pre id="jwt-payload-json">{\n  "sub": "admin_user",\n  "role": "ADMIN",\n  "iat": 1722326400,\n  "exp": 1722330000\n}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: INTERVIEW QUIZ -->
+        <section id="quiz" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <div>
+                    <h2 style="font-family: var(--font-heading); font-size: 1.4rem;">Spring Security Interview Practice Flashcards</h2>
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">Click on any card to flip and reveal the ideal answer for interviewers!</p>
+                </div>
+                <button class="btn-action" style="width: auto; padding: 0.5rem 1rem;" onclick="resetQuiz()">🔄 Shuffle Cards</button>
+            </div>
+
+            <div class="grid-3" id="quiz-grid">
+                <!-- Cards injected by JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Tab Switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Endpoint selection auto-sets method
+        function updateSimDefaults() {
+            const select = document.getElementById('sim-endpoint');
+            const selectedOpt = select.options[select.selectedIndex];
+            const method = selectedOpt.getAttribute('data-method');
+            if (method) {
+                document.getElementById('sim-method').value = method;
+            }
+        }
+
+        // Run Flow Simulation
+        async function runSecuritySimulation() {
+            const endpoint = document.getElementById('sim-endpoint').value;
+            const method = document.getElementById('sim-method').value;
+            const role = document.getElementById('sim-role').value;
+            const tokenType = document.getElementById('sim-token-type').value;
+
+            const consoleLog = document.getElementById('console-log');
+            consoleLog.innerHTML = ''; // clear log
+
+            function log(msg, type='info') {
+                const time = new Date().toLocaleTimeString();
+                const div = document.createElement('div');
+                div.className = 'log-line';
+                div.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${msg}</span>`;
+                consoleLog.appendChild(div);
+                consoleLog.scrollTop = consoleLog.scrollHeight;
+            }
+
+            // Reset Steps
+            for (let i = 1; i <= 5; i++) {
+                const step = document.getElementById(`step-${i}`);
+                const badge = document.getElementById(`badge-${i}`);
+                step.className = 'flow-step';
+                badge.className = 'step-badge badge-pending';
+                badge.innerText = 'Pending';
+            }
+
+            log(`Initiating HTTP ${method} request to ${endpoint}...`, 'info');
+
+            // STEP 1: SecurityFilterChain Match
+            await sleep(400);
+            const isPublic = [
+                '/api/users/login', 
+                '/api/users/register', 
+                '/api/users/forgot-password', 
+                '/api/users/verify-otp', 
+                '/api/users/reset-password',
+                '/swagger-ui/index.html'
+            ].some(path => endpoint.startsWith(path));
+
+            setStepStatus(1, 'passed', 'Success');
+            if (isPublic) {
+                log(`SecurityConfig: Endpoint matched public permitAll() pattern. Token not mandatory.`, 'success');
+            } else {
+                log(`SecurityConfig: Endpoint requires authentication (.anyRequest().authenticated()). Routing to JwtAuthenticationFilter...`, 'info');
+            }
+
+            // STEP 2: JwtAuthenticationFilter
+            await sleep(500);
+            if (tokenType === 'none') {
+                if (isPublic) {
+                    setStepStatus(2, 'passed', 'Bypassed');
+                    log(`JwtAuthenticationFilter: No Bearer token provided, but endpoint is public. Proceeding to Controller.`, 'warn');
+                    setStepStatus(3, 'passed', 'N/A');
+                    setStepStatus(4, 'passed', 'Anonymous');
+                    setStepStatus(5, 'passed', 'Allowed');
+                    log(`HTTP Response: 200 OK (Public Endpoint Executed)`, 'success');
+                    return;
+                } else {
+                    setStepStatus(2, 'rejected', 'Failed');
+                    log(`JwtAuthenticationFilter: No Bearer Authorization header found on protected endpoint!`, 'error');
+                    log(`Spring Security Error: 401 Unauthorized - Full Security Filter Chain halted.`, 'error');
+                    return;
+                }
+            } else if (tokenType === 'invalid') {
+                setStepStatus(2, 'rejected', 'Invalid Token');
+                log(`JwtAuthenticationFilter: JWT signature verification failed (io.jsonwebtoken.security.SignatureException)`, 'error');
+                log(`HTTP Response: 401 Unauthorized`, 'error');
+                return;
+            } else if (tokenType === 'expired') {
+                setStepStatus(2, 'rejected', 'Expired Token');
+                log(`JwtAuthenticationFilter: JWT expired at current timestamp (io.jsonwebtoken.ExpiredJwtException)`, 'error');
+                log(`HTTP Response: 401 Unauthorized`, 'error');
+                return;
+            }
+
+            setStepStatus(2, 'passed', 'Token Extracted');
+            log(`JwtAuthenticationFilter: Valid Bearer header detected. Extracted username from JWT Claims.`, 'success');
+
+            // STEP 3: CustomerUserDetailsService
+            await sleep(500);
+            setStepStatus(3, 'passed', 'User Loaded');
+            log(`CustomerUserDetailsService: Loaded UserDetails for subject. Granted Authorities: [ROLE_${role}]`, 'success');
+
+            // STEP 4: SecurityContextHolder
+            await sleep(400);
+            setStepStatus(4, 'passed', 'Context Set');
+            log(`SecurityContextHolder: UsernamePasswordAuthenticationToken set in ThreadLocal context.`, 'success');
+
+            // STEP 5: Method Security (@PreAuthorize)
+            await sleep(500);
+            if (endpoint === '/api/exams' && method === 'POST' && role !== 'ADMIN') {
+                setStepStatus(5, 'rejected', '403 Forbidden');
+                log(`@PreAuthorize("hasRole('ADMIN')"): Access Denied! User role ROLE_${role} does not meet requirement 'ROLE_ADMIN'.`, 'error');
+                log(`HTTP Response: 403 Forbidden (AccessDeniedException)`, 'error');
+                return;
+            }
+
+            setStepStatus(5, 'passed', 'Authorized');
+            log(`@PreAuthorize Check Passed! User has required authority.`, 'success');
+            log(`HTTP Response: 200 OK / 201 Created (Controller Method Executed)`, 'success');
+        }
+
+        function setStepStatus(stepNum, status, badgeText) {
+            const step = document.getElementById(`step-${stepNum}`);
+            const badge = document.getElementById(`badge-${stepNum}`);
+            step.className = `flow-step ${status}`;
+            badge.className = `step-badge badge-${status === 'passed' ? 'success' : 'error'}`;
+            badge.innerText = badgeText;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Component Code Inspector Data
+        const codeMap = {
+            securityConfig: {
+                title: "SecurityConfig.java",
+                path: "com/exam/exam_management_system/config/SecurityConfig.java",
+                explanation: "Main configuration class. Defines SecurityFilterChain bean with stateless CSRF protection, configures public vs protected endpoints, registers PasswordEncoder (BCrypt), and injects JwtAuthenticationFilter.",
+                code: `<span class="ann">@Configuration</span>\n<span class="ann">@EnableWebSecurity</span>\n<span class="ann">@EnableMethodSecurity</span>\n<span class="kw">public class</span> <span class="cls">SecurityConfig</span> {\n\n    <span class="kw">private final</span> <span class="cls">JwtAuthenticationFilter</span> jwtAuthenticationFilter;\n\n    <span class="ann">@Bean</span>\n    <span class="kw">public</span> <span class="cls">SecurityFilterChain</span> securityFilterChain(<span class="cls">HttpSecurity</span> http) <span class="kw">throws</span> <span class="cls">Exception</span> {\n        http\n            .csrf(csrf -> csrf.disable())\n            .authorizeHttpRequests(auth -> auth\n                .requestMatchers(\n                    <span class="str">"/api/users/register"</span>,\n                    <span class="str">"/api/users/login"</span>,\n                    <span class="str">"/api/users/forgot-password"</span>,\n                    <span class="str">"/swagger-ui/**"</span>\n                ).permitAll()\n                .anyRequest().authenticated()\n            )\n            .addFilterBefore(jwtAuthenticationFilter, <span class="cls">UsernamePasswordAuthenticationFilter</span>.class);\n        <span class="kw">return</span> http.build();\n    }\n}`
+            },
+            jwtFilter: {
+                title: "JwtAuthenticationFilter.java",
+                path: "com/exam/exam_management_system/security/JwtAuthenticationFilter.java",
+                explanation: "Extends OncePerRequestFilter to guarantee single execution per HTTP request. Extracts Bearer token, validates claims via JwtService, and sets authentication in SecurityContextHolder.",
+                code: `<span class="ann">@Component</span>\n<span class="kw">public class</span> <span class="cls">JwtAuthenticationFilter</span> <span class="kw">extends</span> <span class="cls">OncePerRequestFilter</span> {\n\n    <span class="ann">@Override</span>\n    <span class="kw">protected void</span> doFilterInternal(<span class="cls">HttpServletRequest</span> req, <span class="cls">HttpServletResponse</span> res, <span class="cls">FilterChain</span> chain)\n            <span class="kw">throws</span> <span class="cls">ServletException</span>, <span class="cls">IOException</span> {\n        <span class="kw">final String</span> authHeader = req.getHeader(<span class="str">"Authorization"</span>);\n        <span class="kw">if</span> (authHeader == null || !authHeader.startsWith(<span class="str">"Bearer "</span>)) {\n            chain.doFilter(req, res);\n            <span class="kw">return</span>;\n        }\n        <span class="kw">final String</span> jwt = authHeader.substring(7);\n        <span class="kw">final String</span> username = jwtService.extractUsername(jwt);\n\n        <span class="kw">if</span> (username != null && <span class="cls">SecurityContextHolder</span>.getContext().getAuthentication() == null) {\n            <span class="cls">UserDetails</span> userDetails = customerUserDetailsService.loadUserByUsername(username);\n            <span class="kw">if</span> (jwtService.isTokenValid(jwt, userDetails)) {\n                <span class="cls">UsernamePasswordAuthenticationToken</span> authToken = <span class="kw">new</span> <span class="cls">UsernamePasswordAuthenticationToken</span>(\n                        userDetails, null, userDetails.getAuthorities());\n                <span class="cls">SecurityContextHolder</span>.getContext().setAuthentication(authToken);\n            }\n        }\n        chain.doFilter(req, res);\n    }\n}`
+            },
+            userDetails: {
+                title: "CustomerUserDetails.java",
+                path: "com/exam/exam_management_system/security/CustomerUserDetails.java",
+                explanation: "Implements Spring Security's UserDetails interface. Converts custom User entity role enum into SimpleGrantedAuthority with mandatory 'ROLE_' prefix.",
+                code: `<span class="kw">public class</span> <span class="cls">CustomerUserDetails</span> <span class="kw">implements</span> <span class="cls">UserDetails</span> {\n    <span class="kw">private final</span> <span class="cls">User</span> user;\n\n    <span class="ann">@Override</span>\n    <span class="kw">public</span> <span class="cls">Collection</span>&lt;? <span class="kw">extends</span> <span class="cls">GrantedAuthority</span>&gt; getAuthorities() {\n        <span class="kw">return</span> <span class="cls">List</span>.of(<span class="kw">new</span> <span class="cls">SimpleGrantedAuthority</span>(<span class="str">"ROLE_"</span> + user.getRole().name()));\n    }\n\n    <span class="ann">@Override</span>\n    <span class="kw">public String</span> getPassword() { <span class="kw">return</span> user.getPassword(); }\n\n    <span class="ann">@Override</span>\n    <span class="kw">public String</span> getUsername() { <span class="kw">return</span> user.getUsername(); }\n}`
+            },
+            userDetailsService: {
+                title: "CustomerUserDetailsService.java",
+                path: "com/exam/exam_management_system/service/CustomerUserDetailsService.java",
+                explanation: "Implements UserDetailsService. Interacts with UserRepository to load user entity from MySQL DB by username.",
+                code: `<span class="ann">@Service</span>\n<span class="kw">public class</span> <span class="cls">CustomerUserDetailsService</span> <span class="kw">implements</span> <span class="cls">UserDetailsService</span> {\n    <span class="kw">private final</span> <span class="cls">UserRepository</span> userRepository;\n\n    <span class="ann">@Override</span>\n    <span class="kw">public</span> <span class="cls">UserDetails</span> loadUserByUsername(<span class="cls">String</span> username) <span class="kw">throws</span> <span class="cls">UsernameNotFoundException</span> {\n        <span class="cls">User</span> user = userRepository.findByUsername(username)\n                .orElseThrow(() -> <span class="kw">new</span> <span class="cls">UsernameNotFoundException</span>(<span class="str">"User Not Found"</span>));\n        <span class="kw">return new</span> <span class="cls">CustomerUserDetails</span>(user);\n    }\n}`
+            },
+            jwtService: {
+                title: "JwtService.java",
+                path: "com/exam/exam_management_system/service/JwtService.java",
+                explanation: "Encapsulates JJWT 0.12.6 token generation, HMAC SHA signing key generation, claims extraction, and expiration validation.",
+                code: `<span class="ann">@Service</span>\n<span class="kw">public class</span> <span class="cls">JwtService</span> {\n    <span class="ann">@Value</span>(<span class="str">"\${jwt.secret}"</span>) <span class="kw">private String</span> secretKey;\n    <span class="ann">@Value</span>(<span class="str">"\${jwt.expiration}"</span>) <span class="kw">private long</span> jwtExpiration;\n\n    <span class="kw">public String</span> generateToken(<span class="cls">UserDetails</span> userDetails) {\n        <span class="kw">return</span> <span class="cls">Jwts</span>.builder()\n                .subject(userDetails.getUsername())\n                .issuedAt(<span class="kw">new</span> <span class="cls">Date</span>())\n                .expiration(<span class="kw">new</span> <span class="cls">Date</span>(<span class="cls">System</span>.currentTimeMillis() + jwtExpiration))\n                .signWith(getSignInKey())\n                .compact();\n    }\n}`
+            },
+            controller: {
+                title: "ExamController.java",
+                path: "com/exam/exam_management_system/controller/ExamController.java",
+                explanation: "Demonstrates fine-grained Role-Based Access Control (RBAC) using @PreAuthorize annotations on REST endpoints.",
+                code: `<span class="ann">@RestController</span>\n<span class="ann">@RequestMapping</span>(<span class="str">"/api/exams"</span>)\n<span class="kw">public class</span> <span class="cls">ExamController</span> {\n\n    <span class="ann">@PostMapping</span>\n    <span class="ann">@PreAuthorize</span>(<span class="str">"hasRole('ADMIN')"</span>)\n    <span class="kw">public</span> <span class="cls">ResponseEntity</span>&lt;<span class="cls">ExamResponseDto</span>&gt; createExam(<span class="ann">@RequestBody</span> <span class="cls">ExamRequestDto</span> dto) {\n        <span class="kw">return new</span> <span class="cls">ResponseEntity</span><>(examService.createExam(dto), <span class="cls">HttpStatus</span>.CREATED);\n    }\n}`
+            }
+        };
+
+        function loadComponentCode(key, el) {
+            document.querySelectorAll('.comp-item').forEach(item => item.classList.remove('active'));
+            el.classList.add('active');
+
+            const item = codeMap[key];
+            document.getElementById('code-panel-title').innerHTML = `<span>📝</span> Code & Explanation: ${item.title}`;
+            document.getElementById('comp-explanation').innerText = item.explanation;
+            document.getElementById('code-filepath').innerText = item.path;
+            document.getElementById('code-snippet').innerHTML = item.code;
+        }
+
+        // Init initial code view
+        loadComponentCode('securityConfig', document.querySelector('.comp-item.active'));
+
+        // JWT Generator Simulation
+        function generateSimulatedJwt() {
+            const sub = document.getElementById('jwt-sub').value || 'admin_user';
+            const role = document.getElementById('jwt-role').value;
+            
+            const header = { alg: "HS256", typ: "JWT" };
+            const payload = {
+                sub: sub,
+                role: role,
+                iat: Math.floor(Date.now() / 1000),
+                exp: Math.floor(Date.now() / 1000) + 3600
+            };
+
+            const headerB64 = btoa(JSON.stringify(header)).replace(/=/g, '');
+            const payloadB64 = btoa(JSON.stringify(payload)).replace(/=/g, '');
+            const dummySig = "c2lnbmF0dXJlX2htYWNfc2hhMjU2X3ZhbGlkYXRlZF9ieV9qd3Rfc2VydmljZQ";
+
+            document.getElementById('jwt-compact').innerText = `${headerB64}.${payloadB64}.${dummySig}`;
+            document.getElementById('jwt-header-json').innerText = JSON.stringify(header, null, 2);
+            document.getElementById('jwt-payload-json').innerText = JSON.stringify(payload, null, 2);
+        }
+
+        // Flashcards Quiz Data
+        const quizData = [
+            {
+                category: "Architecture & Request Flow",
+                q: "Walk me through how a request with a JWT token is authenticated in Spring Security 6.",
+                a: "1. Request hits SecurityFilterChain.\n2. JwtAuthenticationFilter extracts Bearer token from Authorization header.\n3. JwtService extracts username and verifies HMAC SHA signature.\n4. CustomerUserDetailsService fetches UserDetails from DB.\n5. UsernamePasswordAuthenticationToken is populated with authorities ('ROLE_ADMIN') and set into SecurityContextHolder.getContext().setAuthentication().\n6. @PreAuthorize evaluates permissions before controller execution."
+            },
+            {
+                category: "Filter Choice",
+                q: "Why do we extend OncePerRequestFilter instead of generic Filter for JwtAuthenticationFilter?",
+                a: "OncePerRequestFilter guarantees that the filter logic executes strictly ONCE per HTTP request, preventing duplicate execution during internal servlet dispatches (like FORWARD or INCLUDE)."
+            },
+            {
+                category: "CSRF & Security",
+                q: "Why is csrf.disable() safe for stateless REST APIs using JWT?",
+                a: "CSRF exploits automatic browser cookie transmission. Since JWTs are passed explicitly via custom 'Authorization: Bearer <token>' headers rather than cookies, browsers do not attach them on cross-site requests, making CSRF protection redundant."
+            },
+            {
+                category: "Authorities & Roles",
+                q: "Why does CustomerUserDetails prefix roles with 'ROLE_' when constructing SimpleGrantedAuthority?",
+                a: "Spring Security's hasRole('ADMIN') expression internally checks for authority 'ROLE_ADMIN'. Appending 'ROLE_' ensures seamless mapping between your custom Role enum and Spring's role evaluation engine."
+            },
+            {
+                category: "Spring Boot 3 Changes",
+                q: "What are the key differences between Spring Security 5 and Spring Security 6 in your project?",
+                a: "1. WebSecurityConfigurerAdapter removed -> SecurityFilterChain Bean used.\n2. Mandatory Lambda DSL syntax (csrf -> csrf.disable()).\n3. authorizeRequests() replaced by authorizeHttpRequests().\n4. javax.servlet migrated to jakarta.servlet."
+            },
+            {
+                category: "Thread Context",
+                q: "How do you extract the currently authenticated user in a Service method?",
+                a: "Using SecurityContextHolder.getContext().getAuthentication().getName(). Spring Security manages this via a ThreadLocal strategy scoped to the current HTTP request thread."
+            }
+        ];
+
+        function renderQuiz() {
+            const grid = document.getElementById('quiz-grid');
+            grid.innerHTML = '';
+
+            quizData.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'quiz-card';
+                card.onclick = () => card.classList.toggle('flipped');
+
+                card.innerHTML = `
+                    <div class="quiz-card-inner">
+                        <div class="quiz-front">
+                            <div>
+                                <span class="quiz-category">${item.category}</span>
+                                <div class="quiz-question">Q: ${item.q}</div>
+                            </div>
+                            <div class="quiz-hint">💡 Click card to reveal answer</div>
+                        </div>
+                        <div class="quiz-back">
+                            <div>
+                                <span class="quiz-category" style="color: var(--success);">ANSWER & INTERVIEW TIP</span>
+                                <div class="quiz-answer">${item.a.replace(/\n/g, '<br>')}</div>
+                            </div>
+                            <div class="quiz-hint" style="color: var(--primary);">🔄 Click to flip back</div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function resetQuiz() {
+            quizData.sort(() => Math.random() - 0.5);
+            renderQuiz();
+        }
+
+        renderQuiz();
+    </script>
+</body>
+</html>

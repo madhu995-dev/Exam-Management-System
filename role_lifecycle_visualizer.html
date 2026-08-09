@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Exam System Role Lifecycle Visualizer</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #070a12;
+            --bg-card: rgba(15, 23, 42, 0.75);
+            --border-color: rgba(255, 255, 255, 0.08);
+            
+            --admin-color: #ec4899;
+            --admin-glow: rgba(236, 72, 153, 0.35);
+            --faculty-color: #3b82f6;
+            --faculty-glow: rgba(59, 130, 246, 0.35);
+            --student-color: #10b981;
+            --student-glow: rgba(16, 185, 129, 0.35);
+            
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.35);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            
+            --font-sans: 'Inter', system-ui, sans-serif;
+            --font-heading: 'Outfit', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(236, 72, 153, 0.08) 0px, transparent 50%),
+                radial-gradient(at 50% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(7, 10, 18, 0.85);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-title {
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Role Switcher Tabs */
+        .role-nav {
+            display: flex;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.4rem;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+        }
+
+        .role-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.65rem 1.4rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .role-btn.admin-tab.active {
+            background: linear-gradient(135deg, #ec4899, #be185d);
+            color: #fff;
+            box-shadow: 0 4px 20px var(--admin-glow);
+        }
+
+        .role-btn.faculty-tab.active {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #fff;
+            box-shadow: 0 4px 20px var(--faculty-glow);
+        }
+
+        .role-btn.student-tab.active {
+            background: linear-gradient(135deg, #10b981, #047857);
+            color: #fff;
+            box-shadow: 0 4px 20px var(--student-glow);
+        }
+
+        /* Main Content Layout */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .grid-left-right {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-left-right { grid-template-columns: 1fr; }
+        }
+
+        /* Glass Panel */
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Timeline Stepper */
+        .stepper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .step-item {
+            padding: 0.9rem 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .step-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .step-item.active {
+            background: rgba(99, 102, 241, 0.12);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .step-item.active .step-number {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .step-text h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .step-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Detail Cards Grid */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .detail-grid { grid-template-columns: 1fr; }
+        }
+
+        .code-box {
+            background: #030712;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            overflow: hidden;
+        }
+
+        .code-header {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        pre {
+            padding: 1rem;
+            overflow-x: auto;
+            color: #d1d5db;
+        }
+
+        /* Status Badges */
+        .badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-post { background: rgba(236, 72, 153, 0.25); color: #f472b6; }
+        .badge-get { background: rgba(59, 130, 246, 0.25); color: #60a5fa; }
+        .badge-200 { background: rgba(16, 185, 129, 0.25); color: #34d399; }
+        .badge-201 { background: rgba(168, 85, 247, 0.25); color: #c084fc; }
+
+        /* DB State Inspector Table */
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            font-family: var(--font-mono);
+            margin-top: 0.5rem;
+        }
+
+        .db-table th, .db-table td {
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .db-table th {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+        }
+
+        .db-table td {
+            color: #e5e7eb;
+        }
+
+        .tag-highlight {
+            color: #34d399;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="brand-title">🛡️ Exam System Real-Time Role Lifecycle Visualizer</div>
+
+        <nav class="role-nav">
+            <button class="role-btn admin-tab active" onclick="switchRole('ADMIN', this)">
+                <span>👑</span> ADMIN PHASE
+            </button>
+            <button class="role-btn faculty-tab" onclick="switchRole('FACULTY', this)">
+                <span>👨‍🏫</span> FACULTY PHASE
+            </button>
+            <button class="role-btn student-tab" onclick="switchRole('STUDENT', this)">
+                <span>🎓</span> STUDENT PHASE
+            </button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="grid-left-right">
+            
+            <!-- Left: Stepper Navigation -->
+            <div>
+                <div class="glass-card">
+                    <div class="card-title">
+                        <span>📍</span> Execution Steps (<span id="role-title">ADMIN</span>)
+                    </div>
+                    <div class="stepper" id="stepper-list">
+                        <!-- Step items dynamically populated by JS -->
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-title">
+                        <span>⚡</span> Java Backend Trace
+                    </div>
+                    <div style="font-size: 0.825rem; color: var(--text-muted); line-height: 1.5;" id="java-trace-info">
+                        Select a step above to view exact Java Spring Boot classes executing in real-time.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Flow Detail Cards -->
+            <div>
+                <div class="glass-card">
+                    <div class="card-title" id="step-main-title">
+                        <span>🚀</span> Step Detail
+                    </div>
+                    <div style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;" id="step-main-desc">
+                        Description of current operation...
+                    </div>
+
+                    <div class="detail-grid">
+                        <!-- HTTP Request -->
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                                <span style="font-size: 0.8rem; font-weight: 600; color: #a5b4fc;">HTTP REQUEST</span>
+                                <span class="badge badge-post" id="req-method-badge">POST</span>
+                            </div>
+                            <div class="code-box">
+                                <div class="code-header">
+                                    <span id="req-url">/api/users/login</span>
+                                    <span>JSON</span>
+                                </div>
+                                <pre id="req-body">{\n  "username": "admin",\n  "password": "AdminPassword123"\n}</pre>
+                            </div>
+                        </div>
+
+                        <!-- HTTP Response -->
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                                <span style="font-size: 0.8rem; font-weight: 600; color: #34d399;">HTTP RESPONSE</span>
+                                <span class="badge badge-200" id="res-status-badge">200 OK</span>
+                            </div>
+                            <div class="code-box">
+                                <div class="code-header">
+                                    <span>Payload</span>
+                                    <span>JSON</span>
+                                </div>
+                                <pre id="res-body">{\n  "role": "ADMIN",\n  "token": "eyJhbGci...",\n  "status": "Success"\n}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database State Inspector -->
+                <div class="glass-card">
+                    <div class="card-title">
+                        <span>🗄️</span> MySQL Database State Inspector
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;" id="db-table-name">
+                        Table: `users`
+                    </div>
+                    <table class="db-table">
+                        <thead id="db-thead">
+                            <tr>
+                                <th>id</th>
+                                <th>username</th>
+                                <th>role</th>
+                                <th>enabled</th>
+                            </tr>
+                        </thead>
+                        <tbody id="db-tbody">
+                            <tr>
+                                <td>1</td>
+                                <td>admin</td>
+                                <td><span class="tag-highlight">ADMIN</span></td>
+                                <td>true</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Real-Time Role Lifecycle Data Model
+        const roleData = {
+            ADMIN: [
+                {
+                    title: "1. Admin Authentication",
+                    desc: "Admin submits credentials to obtain JWT token containing GrantedAuthority 'ROLE_ADMIN'.",
+                    method: "POST",
+                    status: "200 OK",
+                    url: "/api/users/login",
+                    javaTrace: "UserController ➔ UserServiceImpl ➔ AuthenticationManager.authenticate() ➔ JwtService.generateToken()",
+                    req: `{\n  "username": "admin",\n  "password": "AdminPassword123"\n}`,
+                    res: `{\n  "username": "admin",\n  "role": "ADMIN",\n  "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJBRE1JTiJ9...",\n  "message": "Login Successful"\n}`,
+                    dbTable: "`users`",
+                    dbHead: ["id", "username", "role", "enabled"],
+                    dbRows: [
+                        ["1", "admin", "<span class='tag-highlight'>ADMIN</span>", "true"]
+                    ]
+                },
+                {
+                    title: "2. Schedule Examination",
+                    desc: "Admin creates a new exam schedule. Protected by @PreAuthorize('hasRole(\"ADMIN\")').",
+                    method: "POST",
+                    status: "201 Created",
+                    url: "/api/exams",
+                    javaTrace: "JwtAuthenticationFilter (@PreAuthorize) ➔ ExamController ➔ ExamServiceImpl ➔ ExamRepository.save()",
+                    req: `{\n  "examName": "Data Structures Mid-Term",\n  "subjectId": 101,\n  "examDate": "2026-08-15",\n  "totalMarks": 100\n}`,
+                    res: `{\n  "id": 50,\n  "examName": "Data Structures Mid-Term",\n  "status": "SCHEDULED"\n}`,
+                    dbTable: "`exams`",
+                    dbHead: ["id", "exam_name", "subject_id", "status"],
+                    dbRows: [
+                        ["50", "Data Structures Mid-Term", "101", "<span class='tag-highlight'>SCHEDULED</span>"]
+                    ]
+                },
+                {
+                    title: "3. Automated Seating Allocation",
+                    desc: "Runs transactional algorithm matching enrolled students with available room seats without double booking.",
+                    method: "POST",
+                    status: "200 OK",
+                    url: "/api/seat-allocations/allocate/50",
+                    javaTrace: "SeatAllocationController ➔ SeatAllocationServiceImpl (@Transactional) ➔ SeatAllocationRepository.save()",
+                    req: `// Triggers allocation for Exam ID 50`,
+                    res: `[\n  {\n    "allocationId": 1001,\n    "rollNumber": "24CS001",\n    "room": "Hall 101",\n    "seat": "R1-C1"\n  }\n]`,
+                    dbTable: "`seat_allocations`",
+                    dbHead: ["id", "exam_id", "student_id", "seat_id"],
+                    dbRows: [
+                        ["1001", "50", "1 (24CS001)", "101 (R1-C1)"],
+                        ["1002", "50", "2 (24CS002)", "102 (R1-C2)"]
+                    ]
+                },
+                {
+                    title: "4. Generate Bulk Hall Tickets",
+                    desc: "Generates unique hall ticket numbers for all allocated students.",
+                    method: "POST",
+                    status: "200 OK",
+                    url: "/api/hall-tickets/generate-bulk/50",
+                    javaTrace: "HallTicketController ➔ HallTicketServiceImpl ➔ HallTicketRepository.save()",
+                    req: `// Bulk generate for Exam ID 50`,
+                    res: `{\n  "message": "Generated 45 Hall Tickets successfully."\n}`,
+                    dbTable: "`hall_tickets`",
+                    dbHead: ["id", "hall_ticket_number", "exam_id", "student_id"],
+                    dbRows: [
+                        ["501", "<span class='tag-highlight'>HT-A1B2C3D4</span>", "50", "1 (24CS001)"]
+                    ]
+                }
+            ],
+            FACULTY: [
+                {
+                    title: "1. Faculty Authentication",
+                    desc: "Faculty member logs into the portal to receive JWT with 'ROLE_FACULTY'.",
+                    method: "POST",
+                    status: "200 OK",
+                    url: "/api/users/login",
+                    javaTrace: "UserController ➔ UserServiceImpl ➔ JwtService.generateToken()",
+                    req: `{\n  "username": "FAC101",\n  "password": "Faculty@123"\n}`,
+                    res: `{\n  "username": "FAC101",\n  "role": "FACULTY",\n  "token": "eyJhbGci..."\n}`,
+                    dbTable: "`users`",
+                    dbHead: ["id", "username", "role"],
+                    dbRows: [
+                        ["12", "FAC101", "<span class='tag-highlight'>FACULTY</span>"]
+                    ]
+                },
+                {
+                    title: "2. Record Student Attendance",
+                    desc: "Faculty records student attendance status (PRESENT / ABSENT) during exam conduct.",
+                    method: "POST",
+                    status: "200 OK",
+                    url: "/api/attendances/mark-bulk",
+                    javaTrace: "AttendanceController ➔ AttendanceServiceImpl ➔ AttendanceRepository.saveAll()",
+                    req: `{\n  "examId": 50,\n  "attendanceList": [\n    { "studentId": 1, "status": "PRESENT" },\n    { "studentId": 2, "status": "ABSENT" }\n  ]\n}`,
+                    res: `{\n  "message": "Attendance recorded for 45 students."\n}`,
+                    dbTable: "`attendances`",
+                    dbHead: ["id", "exam_id", "student_id", "status"],
+                    dbRows: [
+                        ["1", "50", "1 (24CS001)", "<span class='tag-highlight'>PRESENT</span>"],
+                        ["2", "50", "2 (24CS002)", "<span style='color: #f87171;'>ABSENT</span>"]
+                    ]
+                },
+                {
+                    title: "3. Marks Upload via Excel Apache POI",
+                    desc: "Parses uploaded .xlsx marks spreadsheet and auto-calculates grades.",
+                    method: "POST",
+                    status: "200 OK",
+                    url: "/api/results/bulk-import/50",
+                    javaTrace: "ResultController ➔ ResultServiceImpl (Apache POI Reader) ➔ ResultRepository.saveAll()",
+                    req: `// Multipart file upload: CS101_Marks.xlsx`,
+                    res: `{\n  "message": "Imported 44 Student Results successfully. 1 Absent."\n}`,
+                    dbTable: "`results`",
+                    dbHead: ["id", "exam_id", "student_id", "marks_obtained", "grade"],
+                    dbRows: [
+                        ["301", "50", "1 (24CS001)", "85", "<span class='tag-highlight'>A+</span>"]
+                    ]
+                }
+            ],
+            STUDENT: [
+                {
+                    title: "1. Student Authentication",
+                    desc: "Student logs into portal to view exam schedules and results.",
+                    method: "POST",
+                    status: "200 OK",
+                    url: "/api/users/login",
+                    javaTrace: "UserController ➔ UserServiceImpl ➔ JwtService.generateToken()",
+                    req: `{\n  "username": "24CS001",\n  "password": "Student@123"\n}`,
+                    res: `{\n  "username": "24CS001",\n  "role": "STUDENT",\n  "token": "eyJhbGci..."\n}`,
+                    dbTable: "`users`",
+                    dbHead: ["id", "username", "role"],
+                    dbRows: [
+                        ["101", "24CS001", "<span class='tag-highlight'>STUDENT</span>"]
+                    ]
+                },
+                {
+                    title: "2. Download OpenPDF Hall Ticket",
+                    desc: "Streams dynamic server-side PDF hall ticket containing seating assignment.",
+                    method: "GET",
+                    status: "200 OK",
+                    url: "/api/hall-tickets/download/HT-A1B2C3D4",
+                    javaTrace: "HallTicketController ➔ HallTicketServiceImpl ➔ OpenPDF Document Writer Stream",
+                    req: `// Headers: Authorization: Bearer <STUDENT_JWT>`,
+                    res: `Binary Stream: application/pdf (HallTicket_24CS001.pdf)`,
+                    dbTable: "`hall_tickets`",
+                    dbHead: ["hall_ticket_number", "student_roll", "room", "seat"],
+                    dbRows: [
+                        ["HT-A1B2C3D4", "24CS001", "Hall 101", "R1-C1"]
+                    ]
+                },
+                {
+                    title: "3. View Grade & Scorecard",
+                    desc: "Student views final marks, GPA, and pass status.",
+                    method: "GET",
+                    status: "200 OK",
+                    url: "/api/results/my-results",
+                    javaTrace: "ResultController ➔ ResultServiceImpl ➔ SecurityContextHolder username query",
+                    req: `// Headers: Authorization: Bearer <STUDENT_JWT>`,
+                    res: `[\n  {\n    "subjectCode": "CS101",\n    "subjectName": "Data Structures",\n    "marksObtained": 85,\n    "grade": "A+",\n    "status": "PASS"\n  }\n]`,
+                    dbTable: "`results`",
+                    dbHead: ["subject", "marks", "grade", "status"],
+                    dbRows: [
+                        ["Data Structures (CS101)", "85", "A+", "<span class='tag-highlight'>PASS</span>"]
+                    ]
+                }
+            ]
+        };
+
+        let currentRole = 'ADMIN';
+        let currentStepIndex = 0;
+
+        function switchRole(role, el) {
+            currentRole = role;
+            currentStepIndex = 0;
+
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+
+            document.getElementById('role-title').innerText = role;
+            renderStepper();
+            loadStepDetail(0);
+        }
+
+        function renderStepper() {
+            const list = document.getElementById('stepper-list');
+            list.innerHTML = '';
+
+            const steps = roleData[currentRole];
+            steps.forEach((step, idx) => {
+                const div = document.createElement('div');
+                div.className = `step-item ${idx === currentStepIndex ? 'active' : ''}`;
+                div.onclick = () => loadStepDetail(idx);
+
+                div.innerHTML = `
+                    <div class="step-number">${idx + 1}</div>
+                    <div class="step-text">
+                        <h4>${step.title}</h4>
+                        <p>${step.method} ${step.url}</p>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function loadStepDetail(idx) {
+            currentStepIndex = idx;
+            renderStepper();
+
+            const data = roleData[currentRole][idx];
+            document.getElementById('step-main-title').innerHTML = `<span>🚀</span> ${data.title}`;
+            document.getElementById('step-main-desc').innerText = data.desc;
+            document.getElementById('java-trace-info').innerText = data.javaTrace;
+
+            document.getElementById('req-method-badge').innerText = data.method;
+            document.getElementById('req-method-badge').className = `badge ${data.method === 'POST' ? 'badge-post' : 'badge-get'}`;
+            document.getElementById('req-url').innerText = data.url;
+            document.getElementById('req-body').innerText = data.req;
+
+            document.getElementById('res-status-badge').innerText = data.status;
+            document.getElementById('res-body').innerText = data.res;
+
+            // Render DB Table
+            document.getElementById('db-table-name').innerText = `Table: ${data.dbTable}`;
+            const thead = document.getElementById('db-thead');
+            thead.innerHTML = `<tr>${data.dbHead.map(h => `<th>${h}</th>`).join('')}</tr>`;
+
+            const tbody = document.getElementById('db-tbody');
+            tbody.innerHTML = data.dbRows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('');
+        }
+
+        // Init
+        renderStepper();
+        loadStepDetail(0);
+    </script>
+</body>
+</html>
